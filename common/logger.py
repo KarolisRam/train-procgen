@@ -35,7 +35,7 @@ class Logger(object):
         self.episode_len_buffer_v = deque(maxlen = 40)
         self.episode_reward_buffer_v = deque(maxlen = 40)
 
-        time_metrics = ["timesteps", "wall_time", "num_episodes"] # only collected once
+        time_metrics = ["timesteps", "wall_time", "fps", "num_episodes"] # only collected once
         episode_metrics = ["max_episode_rewards", "mean_episode_rewards", "min_episode_rewards",
                            "max_episode_len", "mean_episode_len", "min_episode_len",
                            "mean_timeouts"] # collected for both train and val envs
@@ -77,9 +77,10 @@ class Logger(object):
 
     def dump(self):
         wall_time = time.time() - self.start_time
+        fps = self.timesteps / wall_time
         episode_statistics = self._get_episode_statistics()
         episode_statistics_list = list(episode_statistics.values())
-        log = [self.timesteps, wall_time, self.num_episodes] + episode_statistics_list
+        log = [self.timesteps, wall_time, fps, self.num_episodes] + episode_statistics_list
         self.log.loc[len(self.log)] = log
 
         with open(self.logdir + '/log-append.csv', 'a') as f:
