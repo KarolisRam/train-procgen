@@ -29,8 +29,8 @@ def load_env_and_agent(exp_name,
                        logdir=None,
                        num_threads=10):
 
-    if env_name != "coinrun":
-        raise ValueError("Environment must be coinrun")
+    # if env_name != "coinrun":
+    #     raise ValueError("Environment must be coinrun")
 
     ####################
     ## HYPERPARAMETERS #
