@@ -104,6 +104,7 @@ if __name__=='__main__':
                           random_percent=args.random_percent,
                           step_penalty=args.step_penalty,
                           key_penalty=args.key_penalty,
+                          use_backgrounds=False,
                           rand_region=args.rand_region)
         venv = VecExtractDictObs(venv, "rgb")
         normalize_rew = hyperparameters.get('normalize_rew', True)
