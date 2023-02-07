@@ -101,6 +101,7 @@ if __name__=='__main__':
                           start_level=0 if is_valid else args.start_level,
                           distribution_mode=args.distribution_mode,
                           num_threads=1,
+                          use_backgrounds=False,
                           render_mode="rgb_array",
                           random_percent=args.random_percent,
                           corruption_type=args.corruption_type,

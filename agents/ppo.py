@@ -3,7 +3,7 @@ from common.misc_util import adjust_lr, get_n_params
 import torch
 import torch.optim as optim
 import numpy as np
-
+import matplotlib.pyplot as plt
 
 class PPO(BaseAgent):
     def __init__(self,
@@ -146,6 +146,8 @@ class PPO(BaseAgent):
             for _ in range(self.n_steps):
                 act, log_prob_act, value, next_hidden_state = self.predict(obs, hidden_state, done)
                 next_obs, rew, done, info = self.env.step(act)
+                # plt.imsave('/home/karolis/k/goal-misgeneralization/maze/out.png', np.rollaxis(next_obs[0], 0, 3))
+                # return
                 self.storage.store(obs, hidden_state, act, rew, done, info, log_prob_act, value)
                 obs = next_obs
                 hidden_state = next_hidden_state

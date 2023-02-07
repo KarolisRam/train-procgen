@@ -30,7 +30,8 @@ def run_env(
 
     agent = load_env_and_agent(
         exp_name=exp_name,
-        env_name='maze_yellowline',
+        env_name='maze_redline_yellowgem_test',
+        # env_name='maze_yellowline_test',
         num_envs=1,
         num_levels=1,
         start_level=level_seed,
@@ -92,7 +93,7 @@ def run_env(
             hidden_state = next_hidden_state
 
             if done[0]:
-                # print(step, done, info)
+                print(step, done, info)
                 log_metrics(done[0], info[0])
                 return
     return
