@@ -56,6 +56,7 @@ def load_env_and_agent(exp_name,
                         num_levels=num_levels,
                         start_level=int(start_level),
                         distribution_mode=distribution_mode,
+                        use_backgrounds=False,
                         num_threads=num_threads,
                         random_percent=random_percent)
         venv = VecExtractDictObs(venv, "rgb")
