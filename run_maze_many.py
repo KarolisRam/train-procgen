@@ -103,8 +103,8 @@ def run_env(
             if done[0]:
                 # print(step, done, info, rew)
                 # log_metrics(done[0], info[0])
-                return [step, info[0]['env_reward']]
-    return [step, 0]
+                return [level_seed, step, info[0]['env_reward']]
+    return [level_seed, step, 0]
 
 
 if __name__=='__main__':
@@ -113,7 +113,7 @@ if __name__=='__main__':
     parser.add_argument('--start_level',      type=int, default = int(0), help='start-level for environment')
     parser.add_argument('--device',           type=str, default = 'cpu', required = False, help='whether to use gpu')
     parser.add_argument('--gpu_device',       type=int, default = int(0), required = False, help = 'visible device in CUDA')
-    parser.add_argument('--agent_seed',       type=int, default = random.randint(0,999999), help='Seed for pytorch')
+    parser.add_argument('--agent_seed',       type=int, default = 42, help='Seed for pytorch')
     parser.add_argument('--log_level',        type=int, default = int(40), help='[10,20,30,40]')
     parser.add_argument('--logdir',           type=str, default = None)
     parser.add_argument('--start_level_seed', type=int, default = 0)
@@ -135,8 +135,6 @@ if __name__=='__main__':
 
     args = parser.parse_args()
 
-    # Seeds
-    set_global_seeds(args.agent_seed)
     set_global_log_levels(args.log_level)
 
     agent_folders = sorted(os.listdir(PATH))
@@ -144,7 +142,10 @@ if __name__=='__main__':
         model_files = sorted([f for f in os.listdir(os.path.join(PATH, agent_folder)) if f.endswith('.pth')],
                              key=lambda x: int(x.split('_')[1].split('.')[0]))
         # print(f'running {agent_folder}')
-        for model_file in model_files:
+        for model_file in model_files[-1:]:
+            # Seeds
+            set_global_seeds(args.agent_seed)
+
             path_to_model_file = os.path.join(PATH, agent_folder, model_file)
             logpath = os.path.join(PATH_OUT, agent_folder)
             os.makedirs(logpath, exist_ok=True)
@@ -168,7 +169,7 @@ if __name__=='__main__':
                 outs.append(out)
             with open(logfile, "w") as f:
                 w = csv.writer(f)
-                w.writerow(['steps', 'reward'])
+                w.writerow(['seed', 'steps', 'reward'])
                 for out in outs:
                     w.writerow(out)
 
