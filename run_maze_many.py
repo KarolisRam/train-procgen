@@ -141,7 +141,8 @@ if __name__=='__main__':
 
     agent_folders = sorted(os.listdir(PATH))
     for agent_folder in tqdm(agent_folders):
-        model_files = sorted([f for f in os.listdir(os.path.join(PATH, agent_folder)) if f.endswith('.pth')])
+        model_files = sorted([f for f in os.listdir(os.path.join(PATH, agent_folder)) if f.endswith('.pth')],
+                             key=lambda x: int(x.split('_')[1].split('.')[0]))
         # print(f'running {agent_folder}')
         for model_file in model_files:
             path_to_model_file = os.path.join(PATH, agent_folder, model_file)
