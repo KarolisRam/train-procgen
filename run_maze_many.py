@@ -116,7 +116,7 @@ if __name__=='__main__':
     parser.add_argument('--agent_seed',       type=int, default = 42, help='Seed for pytorch')
     parser.add_argument('--log_level',        type=int, default = int(40), help='[10,20,30,40]')
     parser.add_argument('--logdir',           type=str, default = None)
-    parser.add_argument('--start_level_seed', type=int, default = 0)
+    parser.add_argument('--start_level_seed', type=int, default = 100000)
     parser.add_argument('--num_seeds',        type=int, default = 10)
     parser.add_argument('--random_percent',   type=int, default = 0)
     parser.add_argument('--seed_file',        type=str, help="path to text file with env seeds to run on.")
