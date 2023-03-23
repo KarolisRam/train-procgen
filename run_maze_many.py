@@ -47,6 +47,7 @@ def run_env(
         num_levels=1,
         start_level=level_seed,
         num_threads=1,
+        use_backgrounds=False,
         **kwargs)
 
     obs = agent.env.reset()

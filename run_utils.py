@@ -27,6 +27,7 @@ def load_env_and_agent(exp_name,
                        gpu_device=0,
                        random_percent=0,
                        logdir=None,
+                       use_backgrounds=False,
                        num_threads=10):
 
     # if env_name != "coinrun":
@@ -56,7 +57,7 @@ def load_env_and_agent(exp_name,
                         num_levels=num_levels,
                         start_level=int(start_level),
                         distribution_mode=distribution_mode,
-                        use_backgrounds=False,
+                        use_backgrounds=use_backgrounds,
                         num_threads=num_threads,
                         random_percent=random_percent)
         venv = VecExtractDictObs(venv, "rgb")
