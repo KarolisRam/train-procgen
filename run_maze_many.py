@@ -1,11 +1,13 @@
 # runs many maze evals, does all model files in each directory under PATH.
 from common.env.procgen_wrappers import *
 from common import set_global_seeds, set_global_log_levels
+import copy
 import csv
 import os, argparse
 import random
 from tqdm import tqdm
 import config
+import matplotlib.pyplot as plt
 import numpy as np
 
 from run_utils import load_env_and_agent
@@ -22,6 +24,7 @@ def run_env(
         logfile=None,
         max_num_timesteps=10000,
         save_value=False,
+        save_first_obs=False,
         **kwargs):
     """
     Runs one maze level.
@@ -47,6 +50,9 @@ def run_env(
         **kwargs)
 
     obs = agent.env.reset()
+    first_obs = None
+    if save_first_obs:
+        first_obs = copy.deepcopy(obs)
     hidden_state = np.zeros((agent.n_envs, agent.storage.hidden_state_size))
     done = np.zeros(agent.n_envs)
 
@@ -103,8 +109,8 @@ def run_env(
             if done[0]:
                 # print(step, done, info, rew)
                 # log_metrics(done[0], info[0])
-                return [level_seed, step, info[0]['env_reward']]
-    return [level_seed, step, 0]
+                return [level_seed, step, info[0]['env_reward']], first_obs
+    return [level_seed, step, 0], first_obs
 
 
 if __name__=='__main__':
@@ -150,23 +156,27 @@ if __name__=='__main__':
             logpath = os.path.join(PATH_OUT, agent_folder)
             os.makedirs(logpath, exist_ok=True)
 
-            logfile = os.path.join(logpath, f'{model_file[:-4]}.csv')
-
             seeds = np.arange(NUM_SEEDS) + args.start_level_seed
+
+            logfile = os.path.join(logpath, f'{model_file[:-4]}.csv')
 
             # print(f"Saving metrics to {logfile}.")
             outs = []
             for env_seed in tqdm(seeds, disable=True):
-                out = run_env(exp_name=args.exp_name,
-                        logfile=logfile,
-                        model_file=path_to_model_file,
-                        level_seed=env_seed,
-                        device=args.device,
-                        gpu_device=args.gpu_device,
-                        # random_percent=args.random_percent,
-                        # reset_mode=args.reset_mode
-                            )
+                out, obs_save = run_env(exp_name=args.exp_name,
+                                        logfile=logfile,
+                                        model_file=path_to_model_file,
+                                        level_seed=env_seed,
+                                        device=args.device,
+                                        gpu_device=args.gpu_device,
+                                        save_first_obs=env_seed == seeds[0]
+                                        # random_percent=args.random_percent,
+                                        # reset_mode=args.reset_mode
+                                        )
                 outs.append(out)
+                if obs_save is not None:
+                    first_obs_file = os.path.join(logpath, f'seed-{env_seed}.png')
+                    plt.imsave(first_obs_file, np.rollaxis(obs_save[0], 0, 3))
             with open(logfile, "w") as f:
                 w = csv.writer(f)
                 w.writerow(['seed', 'steps', 'reward'])
