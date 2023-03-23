@@ -30,7 +30,9 @@ def run_env(
 
     agent = load_env_and_agent(
         exp_name=exp_name,
-        env_name='maze_redline_yellowgem_test',
+        env_name='maze_pure_yellowline',
+        # env_name='maze_colorsobjects_duel',
+        distribution_mode='easy',
         # env_name='maze_yellowline_test',
         num_envs=1,
         num_levels=1,
@@ -87,17 +89,17 @@ def run_env(
             step += 1
             act, log_prob_act, value, next_hidden_state = agent.predict(obs, hidden_state, done)
             next_obs, rew, done, info = agent.env.step(act)
+            # next_obs, rew, done, info = agent.env.step(np.array([agent.env.action_space.sample()]))  # random actions
 
             agent.storage.store(obs, hidden_state, act, rew, done, info, log_prob_act, value)
             obs = next_obs
             hidden_state = next_hidden_state
 
             if done[0]:
-                print(step, done, info)
-                log_metrics(done[0], info[0])
-                return
-    return
-
+                # print(step, done, info, rew)
+                # log_metrics(done[0], info[0])
+                return [step, info[0]['env_reward']]
+    return [step, 0]
 
 
 if __name__=='__main__':
@@ -152,13 +154,21 @@ if __name__=='__main__':
 
     logfile = os.path.join(logpath, f"metrics_agent_seed_{args.agent_seed}.csv")
     print(f"Saving metrics to {logfile}.")
-    for env_seed in tqdm(seeds, disable=True):
-        run_env(exp_name=args.exp_name,
-            logfile=logfile,
-            model_file=path_to_model_file,
-            level_seed=env_seed,
-            device=args.device,
-            gpu_device=args.gpu_device,
-            # random_percent=args.random_percent,
-            # reset_mode=args.reset_mode
-                )
+    outs = []
+    for env_seed in tqdm(seeds, disable=False):
+        out = run_env(exp_name=args.exp_name,
+                logfile=logfile,
+                model_file=path_to_model_file,
+                level_seed=env_seed,
+                device=args.device,
+                gpu_device=args.gpu_device,
+                # random_percent=args.random_percent,
+                # reset_mode=args.reset_mode
+                    )
+        outs.append(out)
+    with open(logfile, "w") as f:
+        w = csv.writer(f)
+        w.writerow(['steps', 'reward'])
+        for out in outs:
+            w.writerow(out)
+
