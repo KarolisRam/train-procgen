@@ -4,6 +4,7 @@ from common import set_global_seeds, set_global_log_levels
 import copy
 import csv
 import os, argparse
+import psutil
 import random
 from tqdm import tqdm
 import config
@@ -183,4 +184,5 @@ if __name__=='__main__':
                 w.writerow(['seed', 'steps', 'reward'])
                 for out in outs:
                     w.writerow(out)
-
+            # print(psutil.Process(os.getpid()).memory_info().rss / 1024 ** 2)  # print RAM usage by the process
+            # TODO: leaks memory somewhere, can get to 30GB+ per process
