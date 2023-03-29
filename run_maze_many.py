@@ -22,7 +22,6 @@ NUM_SEEDS = 100
 def run_env(
         exp_name,
         level_seed,
-        logfile=None,
         max_num_timesteps=10000,
         save_value=False,
         save_first_obs=False,
@@ -34,9 +33,6 @@ def run_env(
     """
     if save_value:
         raise NotImplementedError
-
-    if logfile is not None:
-        append_to_csv = True
 
     agent = load_env_and_agent(
         exp_name=exp_name,
@@ -57,44 +53,6 @@ def run_env(
         first_obs = copy.deepcopy(obs)
     hidden_state = np.zeros((agent.n_envs, agent.storage.hidden_state_size))
     done = np.zeros(agent.n_envs)
-
-    def log_to_csv(metrics):
-        """write metrics to csv"""
-        if not metrics:
-            return
-        column_names = ["seed", "steps", "rand_coin", "coin_collected", "inv_coin_collected", "died", "timed_out"]
-        metrics = [int(m) for m in metrics]
-        if append_to_csv:
-            with open(logfile, "a") as f:
-                w = csv.writer(f)
-                if f.tell() == 0:  # write header first
-                    w.writerow(column_names)
-                w.writerow(metrics)
-
-    def log_metrics(done: bool, info: dict):
-        """
-        When run complete, log metrics in the
-        following format:
-        seed, steps, randomize_goal, collected_coin, collected_inv_coin, died, timed_out
-        """
-        metrics = None
-        if done:
-            keys = ["prev_level_seed", "prev_level/total_steps", "prev_level/randomize_goal", "prev_level_complete",
-                    "prev_level/invisible_coin_collected"]
-            metrics = [info[key] for key in keys]
-            if info["prev_level_complete"]:
-                metrics.extend([False, False])
-            else:
-                timed_out = info["prev_level/total_steps"] > 999
-                metrics.extend([not timed_out, timed_out])
-        elif info["invisible_coin_collected"]:
-            keys = ["level_seed", "total_steps", "randomize_goal"]
-            metrics = [info[key] for key in keys]
-            metrics.extend([-1, True, -1, -1])
-        else:
-            raise
-        log_to_csv(metrics)
-        return metrics
 
     step = 0
     while step < max_num_timesteps:
