@@ -124,7 +124,6 @@ if __name__=='__main__':
             outs = []
             for env_seed in tqdm(seeds, disable=True):
                 out, obs_save = run_env(exp_name=args.exp_name,
-                                        logfile=logfile,
                                         model_file=path_to_model_file,
                                         level_seed=env_seed,
                                         device=args.device,
