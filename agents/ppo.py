@@ -148,6 +148,10 @@ class PPO(BaseAgent):
             if self.t == 0:
                 obs_path = os.path.join(self.logger.logdir, 'obs.png')
                 plt.imsave(obs_path, np.rollaxis(obs[0], 0, 3))
+                print("Saving untrained model.")
+                torch.save({'model_state_dict': self.policy.state_dict(),
+                            'optimizer_state_dict': self.optimizer.state_dict()},
+                           self.logger.logdir + '/model_' + str(self.t) + '.pth')
             for _ in range(self.n_steps):
                 act, log_prob_act, value, next_hidden_state = self.predict(obs, hidden_state, done)
                 next_obs, rew, done, info = self.env.step(act)
