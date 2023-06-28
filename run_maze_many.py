@@ -10,13 +10,17 @@ from tqdm import tqdm
 import config
 import matplotlib.pyplot as plt
 import numpy as np
+import time
 
 from run_utils import load_env_and_agent
 
 
-PATH = '/home/karolis/k/goal-misgeneralization/train-procgen/logs/train/maze_pure_yellowline/maze-5x5/'
-PATH_OUT = '/home/karolis/k/goal-misgeneralization/train-procgen/experiments/results/maze-5x5-red-line-green-line/'
-NUM_SEEDS = 100
+PATH = '/home/karolis/k/goal-misgeneralization/train-procgen/logs/train/maze_pure_yellowline/maze-5x5-with-init-weights/'
+PATH_OUT =    '/home/karolis/k/goal-misgeneralization/train-procgen/experiments/results-1000/maze-5x5-with-init-weights/black-gem-red-line/'
+AGENT_FROM = 0
+AGENT_TO = 100
+NUM_SEEDS = 1000
+print(f'\nRunning experiment: {"/".join(PATH_OUT.split("/")[-3:])}, {NUM_SEEDS} seeds.')
 
 
 def run_env(
@@ -104,11 +108,14 @@ if __name__=='__main__':
     set_global_log_levels(args.log_level)
 
     agent_folders = sorted(os.listdir(PATH))
-    for agent_folder in tqdm(agent_folders):
+    total_steps = 0
+    first_start_time = time.time()
+    for agent_idx, agent_folder in enumerate(tqdm(agent_folders[AGENT_FROM:AGENT_TO])):
         model_files = sorted([f for f in os.listdir(os.path.join(PATH, agent_folder)) if f.endswith('.pth')],
                              key=lambda x: int(x.split('_')[1].split('.')[0]))
         # print(f'running {agent_folder}')
-        for model_file in model_files[-1:]:
+        for model_idx, model_file in enumerate(model_files[-1:]):
+            start_time = time.time()
             # Seeds
             set_global_seeds(args.agent_seed)
 
@@ -122,13 +129,15 @@ if __name__=='__main__':
 
             # print(f"Saving metrics to {logfile}.")
             outs = []
-            for env_seed in tqdm(seeds, disable=True):
+            for env_seed_idx, env_seed in enumerate(seeds):
+                # save first obs of each level for first agent and just first level for other agents:
+                save_first_obs = (agent_idx == 0 or env_seed_idx == 0) and model_idx == 0
                 out, obs_save = run_env(exp_name=args.exp_name,
                                         model_file=path_to_model_file,
                                         level_seed=env_seed,
                                         device=args.device,
                                         gpu_device=args.gpu_device,
-                                        save_first_obs=env_seed == seeds[0]
+                                        save_first_obs=save_first_obs,
                                         # random_percent=args.random_percent,
                                         # reset_mode=args.reset_mode
                                         )
@@ -141,5 +150,12 @@ if __name__=='__main__':
                 w.writerow(['seed', 'steps', 'reward'])
                 for out in outs:
                     w.writerow(out)
+            steps = sum([out[1] for out in outs])
+            total_steps += steps
+            end_time = time.time()
+            current_fps = steps / (end_time - start_time)
+            fps = total_steps / (end_time - first_start_time)
+            print(f'{steps} steps in {end_time - start_time:.2f} s at {current_fps:.2f} fps.')
+            print(f'{total_steps} total_steps in {end_time - first_start_time:.2f} s at {fps:.2f} fps.')
             # print(psutil.Process(os.getpid()).memory_info().rss / 1024 ** 2)  # print RAM usage by the process
-            # TODO: leaks memory somewhere, can get to 30GB+ per process
+            # TODO: leaks memory somewhere, can get to 40GB+ per process
