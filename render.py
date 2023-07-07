@@ -136,9 +136,10 @@ if __name__=='__main__':
     ## LOGGER ##
     ############
     print('INITIALIZAING LOGGER...')
+    model_name = '_'.join(args.model_file[:-4].split('/')[-2:])
     if args.logdir is None:
         logdir = 'procgen/' + env_name + '/' + exp_name + '/' + 'RENDER_seed' + '_' + \
-                 str(seed) + '_' + time.strftime("%d-%m-%Y_%H-%M-%S")
+                 str(seed) + '_' + model_name + '_' + time.strftime("%d-%m-%Y_%H-%M-%S")
         logdir = os.path.join('logs', logdir)
     else:
         logdir = args.logdir
