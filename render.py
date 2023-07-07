@@ -107,6 +107,7 @@ if __name__=='__main__':
                           corruption_type=args.corruption_type,
                           corruption_severity=int(args.corruption_severity),
                           continue_after_coin=args.continue_after_coin,
+                          rand_seed=seed,
                           )
         info_key = None if args.agent_view else "rgb"
         ob_key = "rgb" if args.agent_view else None
@@ -318,3 +319,4 @@ if __name__=='__main__':
 
         agent.storage.compute_estimates(agent.gamma, agent.lmbda, agent.use_gae,
                                        agent.normalize_adv)
+        break
