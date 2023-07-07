@@ -243,6 +243,7 @@ if __name__=='__main__':
     individual_value_idx = 1001
     save_frequency = 1
     saliency_save_idx = 0
+    episode_save_idx = 0
     epoch_idx = 0
     while True:
         agent.policy.eval()
@@ -291,17 +292,20 @@ if __name__=='__main__':
                     grad_vid = grad_vid + sample_ims_faint
 
                     grad_vid = Image.fromarray(grad_vid.swapaxes(0,2).squeeze())
-                    grad_vid.save(logdir_saliency_value + f"/sal_obs_{saliency_save_idx:05d}_grad.png")
+                    grad_vid.save(logdir_saliency_value + f"/sal_obs_{episode_save_idx:05d}_{saliency_save_idx:05d}_grad.png")
 
                     obs_copy = (obs_copy * 255).astype(np.uint8)
                     obs_copy = Image.fromarray(obs_copy.swapaxes(0,2).squeeze())
-                    obs_copy.save(logdir_saliency_value + f"/sal_obs_{saliency_save_idx:05d}_raw.png")
+                    obs_copy.save(logdir_saliency_value + f"/sal_obs_{episode_save_idx:05d}_{saliency_save_idx:05d}_raw.png")
 
                 saliency_save_idx += 1
 
 
 
             next_obs, rew, done, info = agent.env.step(act)
+            if done:
+                saliency_save_idx = 0
+                episode_save_idx += 1
 
             agent.storage.store(obs, hidden_state, act, rew, done, info, log_prob_act, value)
             obs = next_obs
