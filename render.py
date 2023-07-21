@@ -275,7 +275,7 @@ if __name__=='__main__':
 
 
                     # Make a couple of copies of the original im for later
-                    sample_ims_faint = torch.tensor(obs_copy.mean(-1)) * 0.2
+                    sample_ims_faint = torch.tensor(obs_copy.mean(-1)) * 0.0
                     sample_ims_faint = torch.stack([sample_ims_faint] * 3, axis=-1)
                     sample_ims_faint = sample_ims_faint * 255
                     sample_ims_faint = sample_ims_faint.clone().detach().type(
@@ -285,7 +285,7 @@ if __name__=='__main__':
                     grad_vid = np.zeros_like(sample_ims_faint)
                     pos_grads = pos_grads * grad_scale * 255
                     neg_grads = neg_grads * grad_scale * 255
-                    grad_vid[:, :, :, 2] = pos_grads.squeeze().clone().detach().type(
+                    grad_vid[:, :, :, 1] = pos_grads.squeeze().clone().detach().type(
                         torch.uint8).cpu().numpy()
                     grad_vid[:, :, :, 0] = neg_grads.squeeze().clone().detach().type(
                         torch.uint8).cpu().numpy()
