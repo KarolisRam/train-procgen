@@ -4,6 +4,9 @@ from collections import deque
 import time
 import csv
 
+# Set the float formatting options
+pd.options.display.float_format = '{:,.2f}'.format
+
 try:
     import wandb
 except ImportError:
