@@ -20,6 +20,9 @@ PATH_OUT =    '/home/karolis/k/goal-misgeneralization/train-procgen/experiments/
 AGENT_FROM = 0
 AGENT_TO = 100
 NUM_SEEDS = 1000
+WORLD_DIM = 7
+PATH = f'/home/karolis/k/goal-misgeneralization/train-procgen/logs/train/maze_pure_yellowline/maze-{WORLD_DIM}x{WORLD_DIM}-with-init-weights/'
+PATH_OUT =    f'/home/karolis/k/goal-misgeneralization/train-procgen/experiments/results-1000/maze-{WORLD_DIM}x{WORLD_DIM}-with-init-weights-test/red-line-yellow-gem/'
 print(f'\nRunning experiment: {"/".join(PATH_OUT.split("/")[-3:])}, {NUM_SEEDS} seeds.')
 
 
@@ -49,6 +52,7 @@ def run_env(
         start_level=level_seed,
         num_threads=1,
         use_backgrounds=False,
+        world_dim=WORLD_DIM,
         **kwargs)
 
     obs = agent.env.reset()

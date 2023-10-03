@@ -28,6 +28,7 @@ def load_env_and_agent(exp_name,
                        random_percent=0,
                        logdir=None,
                        use_backgrounds=False,
+                       world_dim=5,
                        num_threads=10):
 
     # if env_name != "coinrun":
@@ -59,7 +60,8 @@ def load_env_and_agent(exp_name,
                         distribution_mode=distribution_mode,
                         use_backgrounds=use_backgrounds,
                         num_threads=num_threads,
-                        random_percent=random_percent)
+                        random_percent=random_percent,
+                        world_dim=world_dim)
         venv = VecExtractDictObs(venv, "rgb")
         normalize_rew = hyperparameters.get('normalize_rew', True)
         if normalize_rew:
