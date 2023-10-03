@@ -20,10 +20,6 @@ PATH_OUT =    '/home/karolis/k/goal-misgeneralization/train-procgen/experiments/
 AGENT_FROM = 0
 AGENT_TO = 100
 NUM_SEEDS = 1000
-WORLD_DIM = 7
-PATH = f'/home/karolis/k/goal-misgeneralization/train-procgen/logs/train/maze_pure_yellowline/maze-{WORLD_DIM}x{WORLD_DIM}-with-init-weights/'
-PATH_OUT =    f'/home/karolis/k/goal-misgeneralization/train-procgen/experiments/results-1000/maze-{WORLD_DIM}x{WORLD_DIM}-with-init-weights-test/red-line-yellow-gem/'
-print(f'\nRunning experiment: {"/".join(PATH_OUT.split("/")[-3:])}, {NUM_SEEDS} seeds.')
 
 
 def run_env(
@@ -52,7 +48,9 @@ def run_env(
         start_level=level_seed,
         num_threads=1,
         use_backgrounds=False,
-        world_dim=WORLD_DIM,
+        world_dim=world_dim,
+        obj1=obj1,
+        obj2=obj2,
         **kwargs)
 
     obs = agent.env.reset()
@@ -106,16 +104,29 @@ if __name__=='__main__':
     parser.add_argument('--vid_dir', type=str, default=None)
     parser.add_argument('--model_file', type=str, help="Can be either a path to a model file, or an "
                                        "integer. Integer is interpreted as random_percent in training")
+    parser.add_argument('--world_dim', type=int, default=5, help='Maze grid dimension')
+    parser.add_argument('--obj1', type=str, default='red_line_diag', help='Maze object 1 name')
+    parser.add_argument('--obj2', type=str, default='yellow_gem', help='Maze object 2 name')
 
     args = parser.parse_args()
 
     set_global_log_levels(args.log_level)
 
-    agent_folders = sorted(os.listdir(PATH))
+    world_dim = args.world_dim
+    obj1 = args.obj1
+    obj2 = args.obj2
+
+    obj1_str = obj1.replace('_', '-').replace('-diag', '')
+    obj2_str = obj2.replace('_', '-').replace('-diag', '')
+    path = f'/home/karolis/k/goal-misgeneralization/train-procgen/logs/train/maze_pure_yellowline/maze-{world_dim}x{world_dim}-with-init-weights/'
+    path_out = f'/home/karolis/k/goal-misgeneralization/train-procgen/experiments/results-1000/maze-{world_dim}x{world_dim}-with-init-weights/{obj1_str}-{obj2_str}/'
+    print(f'\nRunning experiment: {"/".join(path_out.split("/")[-3:])}, {NUM_SEEDS} seeds.')
+
+    agent_folders = sorted(os.listdir(path))
     total_steps = 0
     first_start_time = time.time()
     for agent_idx, agent_folder in enumerate(tqdm(agent_folders[AGENT_FROM:AGENT_TO])):
-        model_files = sorted([f for f in os.listdir(os.path.join(PATH, agent_folder)) if f.endswith('.pth')],
+        model_files = sorted([f for f in os.listdir(os.path.join(path, agent_folder)) if f.endswith('.pth')],
                              key=lambda x: int(x.split('_')[1].split('.')[0]))
         # print(f'running {agent_folder}')
         for model_idx, model_file in enumerate(model_files[-1:]):
@@ -123,8 +134,8 @@ if __name__=='__main__':
             # Seeds
             set_global_seeds(args.agent_seed)
 
-            path_to_model_file = os.path.join(PATH, agent_folder, model_file)
-            logpath = os.path.join(PATH_OUT, agent_folder)
+            path_to_model_file = os.path.join(path, agent_folder, model_file)
+            logpath = os.path.join(path_out, agent_folder)
             os.makedirs(logpath, exist_ok=True)
 
             seeds = np.arange(NUM_SEEDS) + args.start_level_seed
