@@ -158,7 +158,7 @@ if __name__=='__main__':
         cfg = vars(args)
         cfg.update(hyperparameters)
         wb_resume = "allow" if args.model_file is None else "must"
-        wandb.init(project="objective-robustness", config=cfg, tags=args.wandb_tags, resume=wb_resume)
+        wandb.init(project="GMG-Maze", config=cfg, tags=args.wandb_tags, resume=wb_resume)
     logger = Logger(n_envs, logdir, use_wandb=args.use_wandb)
 
     ###########
