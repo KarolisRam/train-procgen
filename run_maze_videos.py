@@ -18,9 +18,6 @@ import time
 
 from run_utils import load_env_and_agent
 
-# TODO: remove these:
-AGENT_FROM = 0
-AGENT_TO = 100
 NUM_SEEDS = 1000
 
 
@@ -30,6 +27,8 @@ def run_env(
         max_num_timesteps=10000,
         save_value=False,
         save_first_obs=False,
+        use_backgrounds=False,
+        env_name='maze_colorsobjects_duel',
         **kwargs):
     """
     Runs one maze level.
@@ -41,15 +40,13 @@ def run_env(
 
     agent = load_env_and_agent(
         exp_name=exp_name,
-        # env_name='maze_pure_yellowline',
-        env_name='maze_colorsobjects_duel',
+        env_name=env_name,
         distribution_mode='easy',
-        # env_name='maze_yellowline_test',
         num_envs=1,
         num_levels=1,
         start_level=level_seed,
         num_threads=1,
-        use_backgrounds=False,
+        use_backgrounds=use_backgrounds,
         world_dim=world_dim,
         obj1=obj1,
         obj2=obj2,
@@ -57,6 +54,7 @@ def run_env(
 
     frames = []
     obs = agent.env.reset()
+    frames.append(np.rollaxis(copy.deepcopy(obs[0]), 0, 3))
     first_obs = None
     if save_first_obs:
         first_obs = copy.deepcopy(obs)
@@ -78,11 +76,9 @@ def run_env(
             frames.append(np.rollaxis(copy.deepcopy(obs[0]), 0, 3))
 
             if done[0]:
-                # print(step, done, info, rew)
-                # log_metrics(done[0], info[0])
-                return [level_seed, step, info[0]['env_reward']], first_obs, frames
+                return [level_seed, step, info[0]['env_reward']], first_obs, frames[:-1]
 
-    return [level_seed, step, 0], first_obs, frames
+    return [level_seed, step, 0], first_obs, frames[:-1]
 
 
 if __name__=='__main__':
@@ -114,6 +110,8 @@ if __name__=='__main__':
     parser.add_argument('--obj1', type=str, default='red_line_diag', help='Maze object 1 name')
     parser.add_argument('--obj2', type=str, default='yellow_gem', help='Maze object 2 name')
     parser.add_argument('--video_frames', type=int, default=100)
+    parser.add_argument('--use_backgrounds', action='store_true')
+    parser.add_argument('--env_name', type=str, default='maze_colorsobjects_duel')
 
     args = parser.parse_args()
 
@@ -125,27 +123,16 @@ if __name__=='__main__':
 
     obj1_str = obj1.replace('_', '-').replace('-diag', '')
     obj2_str = obj2.replace('_', '-').replace('-diag', '')
-    path = f'/home/karolis/k/goal-misgeneralization/train-procgen/logs/train/maze_pure_yellowline/maze-{world_dim}x{world_dim}-with-init-weights/'
-    path_out = f'/home/karolis/k/goal-misgeneralization/train-procgen/experiments/videos/maze-{world_dim}x{world_dim}-with-init-weights/{obj1_str}-{obj2_str}/'
-    print(f'\nRunning experiment: {"/".join(path_out.split("/")[-3:])}, {NUM_SEEDS} seeds.')
+    path = f'logs/train/maze_pure_yellowline/maze-{world_dim}x{world_dim}-with-init-weights/'
+    path_out = f'videos/maze-{world_dim}x{world_dim}-with-init-weights/{obj1_str}-{obj2_str}/'
 
     agent_folders = sorted(os.listdir(path))
     total_steps = 0
     first_start_time = time.time()
-    # --model_file example
-    # /home/karolis/k/goal-misgeneralization/train-procgen/logs/train/maze_pure_yellowline/maze-16x16-with-init-weights/2023-09-07__12-35-49__seed_6954/model_50003968.pth
-
-    # for agent_idx, agent_folder in enumerate(tqdm(agent_folders[AGENT_FROM:AGENT_TO])):
-    #     model_files = sorted([f for f in os.listdir(os.path.join(path, agent_folder)) if f.endswith('.pth')],
-    #                          key=lambda x: int(x.split('_')[1].split('.')[0]))
-    #     # print(f'running {agent_folder}')
-    #     for model_idx, model_file in enumerate(model_files[-1:]):
-    #     # for model_idx, model_file in enumerate(model_files):
     start_time = time.time()
     # Seeds
     set_global_seeds(args.agent_seed)
 
-    # path_to_model_file = os.path.join(path, agent_folder, model_file)
     path_to_model_file = args.model_file
     agent_folder, model_file = path_to_model_file.split('/')[-2:]
     logpath = os.path.join(path_out, agent_folder)
@@ -163,6 +150,8 @@ if __name__=='__main__':
                                                 level_seed=env_seed,
                                                 device=args.device,
                                                 gpu_device=args.gpu_device,
+                                                use_backgrounds=args.use_backgrounds,
+                                                env_name=args.env_name,
                                                 # random_percent=args.random_percent,
                                                 # reset_mode=args.reset_mode
                                                 )
@@ -182,14 +171,20 @@ if __name__=='__main__':
     if args.vid_path:
         vid_path = args.vid_path
     else:
-        vid_path = os.path.join(logpath, 'episodes.mp4')
-    video_frames = [(frame * 255).astype(np.uint8) for frame in video_frames]
-    skvideo.io.vwrite(vid_path, video_frames, inputdict={'-r': '5'}, outputdict={'-pix_fmt': 'yuv420p'})
+        vid_path = os.path.join(logpath, 'episodes.avi')
+    os.makedirs(os.path.dirname(vid_path), exist_ok=True)
+    video_frames = [(frame * 255).astype(np.uint8) for frame in video_frames][:args.video_frames]  # rescale
+    video_frames = [frame[:, :, ::-1] for frame in video_frames]  # RGB->BGR
+    height, width, layers = video_frames[0].shape
+
+    out = cv2.VideoWriter(vid_path, cv2.VideoWriter_fourcc(*'FFV1'), 5.0, (width, height))
+
+    for frame in video_frames:
+        out.write(frame)
+    out.release()
 
     steps = sum([out[1] for out in outs])
     total_steps += steps
     end_time = time.time()
     current_fps = steps / (end_time - start_time)
     fps = total_steps / (end_time - first_start_time)
-    print(f'{steps} steps in {end_time - start_time:.2f} s at {current_fps:.2f} fps.')
-    print(f'{total_steps} total_steps in {end_time - first_start_time:.2f} s at {fps:.2f} fps.')
