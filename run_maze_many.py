@@ -1,4 +1,4 @@
-# runs many maze evals, does all model files in each directory under PATH.
+# runs many maze evals.
 from common.env.procgen_wrappers import *
 from common import set_global_seeds, set_global_log_levels
 import copy
@@ -15,8 +15,6 @@ import time
 from run_utils import load_env_and_agent
 
 
-PATH = '/home/karolis/k/goal-misgeneralization/train-procgen/logs/train/maze_pure_yellowline/maze-5x5-with-init-weights/'
-PATH_OUT =    '/home/karolis/k/goal-misgeneralization/train-procgen/experiments/results-1000/maze-5x5-with-init-weights/black-gem-red-line/'
 AGENT_FROM = 0
 AGENT_TO = 100
 NUM_SEEDS = 1000
@@ -28,6 +26,7 @@ def run_env(
         max_num_timesteps=10000,
         save_value=False,
         save_first_obs=False,
+        world_dim=5,
         **kwargs):
     """
     Runs one maze level.
@@ -79,6 +78,19 @@ def run_env(
     return [level_seed, step, 0], first_obs
 
 
+def find_completed_runs(path_runs):
+    completed_runs = set()
+    runs = []
+    if os.path.exists(path_runs):
+        runs = os.listdir(path_runs)
+    for run in runs:
+        run_path = os.path.join(path_runs, run)
+        csv_files = [f for f in os.listdir(run_path) if f.endswith('csv')]
+        if len(csv_files) > 0:
+            completed_runs.add(run)
+    return completed_runs
+
+
 if __name__=='__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--exp_name',         type=str, default = 'metrics', help='experiment name')
@@ -107,6 +119,7 @@ if __name__=='__main__':
     parser.add_argument('--world_dim', type=int, default=5, help='Maze grid dimension')
     parser.add_argument('--obj1', type=str, default='red_line_diag', help='Maze object 1 name')
     parser.add_argument('--obj2', type=str, default='yellow_gem', help='Maze object 2 name')
+    parser.add_argument('--run_name', type=str, default='with-init-weights', help='run name, mainly for seeded runs')
 
     args = parser.parse_args()
 
@@ -118,18 +131,22 @@ if __name__=='__main__':
 
     obj1_str = obj1.replace('_', '-').replace('-diag', '')
     obj2_str = obj2.replace('_', '-').replace('-diag', '')
-    path = f'/home/karolis/k/goal-misgeneralization/train-procgen/logs/train/maze_pure_yellowline/maze-{world_dim}x{world_dim}-with-init-weights/'
-    path_out = f'/home/karolis/k/goal-misgeneralization/train-procgen/experiments/results-1000/maze-{world_dim}x{world_dim}-with-init-weights/{obj1_str}-{obj2_str}/'
+    path = f'logs/train/maze_pure_yellowline/maze-{world_dim}x{world_dim}-{args.run_name}/'
+    path_out = f'experiments/results-1000/maze-{world_dim}x{world_dim}{"-"+args.run_name if args.run_name else ""}/{obj1_str}-{obj2_str}/'
     print(f'\nRunning experiment: {"/".join(path_out.split("/")[-3:])}, {NUM_SEEDS} seeds.')
 
     agent_folders = sorted(os.listdir(path))
+    completed_runs = find_completed_runs(path_out)
     total_steps = 0
     first_start_time = time.time()
     for agent_idx, agent_folder in enumerate(tqdm(agent_folders[AGENT_FROM:AGENT_TO])):
+        if agent_folder in completed_runs:
+            continue
         model_files = sorted([f for f in os.listdir(os.path.join(path, agent_folder)) if f.endswith('.pth')],
                              key=lambda x: int(x.split('_')[1].split('.')[0]))
         # print(f'running {agent_folder}')
         for model_idx, model_file in enumerate(model_files[-1:]):
+        # for model_idx, model_file in enumerate(model_files):
             start_time = time.time()
             # Seeds
             set_global_seeds(args.agent_seed)
@@ -146,13 +163,14 @@ if __name__=='__main__':
             outs = []
             for env_seed_idx, env_seed in enumerate(seeds):
                 # save first obs of each level for first agent and just first level for other agents:
-                save_first_obs = (agent_idx == 0 or env_seed_idx == 0) and model_idx == 0
+                save_first_obs = (agent_idx == 0 and AGENT_FROM == 0 or env_seed_idx == 0) and model_idx == 0
                 out, obs_save = run_env(exp_name=args.exp_name,
                                         model_file=path_to_model_file,
                                         level_seed=env_seed,
                                         device=args.device,
                                         gpu_device=args.gpu_device,
                                         save_first_obs=save_first_obs,
+                                        world_dim=world_dim,
                                         # random_percent=args.random_percent,
                                         # reset_mode=args.reset_mode
                                         )
