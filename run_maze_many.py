@@ -72,8 +72,6 @@ def run_env(
             hidden_state = next_hidden_state
 
             if done[0]:
-                # print(step, done, info, rew)
-                # log_metrics(done[0], info[0])
                 return [level_seed, step, info[0]['env_reward']], first_obs
     return [level_seed, step, 0], first_obs
 
@@ -144,7 +142,6 @@ if __name__=='__main__':
             continue
         model_files = sorted([f for f in os.listdir(os.path.join(path, agent_folder)) if f.endswith('.pth')],
                              key=lambda x: int(x.split('_')[1].split('.')[0]))
-        # print(f'running {agent_folder}')
         for model_idx, model_file in enumerate(model_files[-1:]):
         # for model_idx, model_file in enumerate(model_files):
             start_time = time.time()
@@ -159,7 +156,6 @@ if __name__=='__main__':
 
             logfile = os.path.join(logpath, f'{model_file[:-4]}.csv')
 
-            # print(f"Saving metrics to {logfile}.")
             outs = []
             for env_seed_idx, env_seed in enumerate(seeds):
                 # save first obs of each level for first agent and just first level for other agents:
@@ -191,4 +187,4 @@ if __name__=='__main__':
             print(f'{steps} steps in {end_time - start_time:.2f} s at {current_fps:.2f} fps.')
             print(f'{total_steps} total_steps in {end_time - first_start_time:.2f} s at {fps:.2f} fps.')
             # print(psutil.Process(os.getpid()).memory_info().rss / 1024 ** 2)  # print RAM usage by the process
-            # TODO: leaks memory somewhere, can get to 40GB+ per process
+            # TODO: leaks memory somewhere, can get to 40GB+ per process. Solved by buying more RAM...
