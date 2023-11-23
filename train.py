@@ -42,6 +42,7 @@ if __name__=='__main__':
     parser.add_argument('--key_penalty',   type=int, default=0, help='HEIST_AISC: Penalty for picking up keys (divided by 10)')
     parser.add_argument('--step_penalty',   type=int, default=0, help='HEIST_AISC: Time penalty per step (divided by 1000)')
     parser.add_argument('--rand_region',   type=int, default=0, help='MAZE: size of region (in upper left corner) in which goal is sampled.')
+    parser.add_argument('--use_backgrounds', action='store_true')
 
 
     #multi threading
@@ -104,7 +105,7 @@ if __name__=='__main__':
                           random_percent=args.random_percent,
                           step_penalty=args.step_penalty,
                           key_penalty=args.key_penalty,
-                          use_backgrounds=False,
+                          use_backgrounds=args.use_backgrounds,
                           rand_region=args.rand_region)
         venv = VecExtractDictObs(venv, "rgb")
         normalize_rew = hyperparameters.get('normalize_rew', True)

@@ -25,6 +25,7 @@ def run_env(
         level_seed,
         max_num_timesteps=10000,
         save_value=False,
+        use_backgrounds=False,
         save_first_obs=False,
         world_dim=5,
         obj1='red_line_diag',
@@ -48,7 +49,7 @@ def run_env(
         num_levels=1,
         start_level=level_seed,
         num_threads=1,
-        use_backgrounds=False,
+        use_backgrounds=use_backgrounds,
         world_dim=world_dim,
         obj1=obj1,
         obj2=obj2,
@@ -119,7 +120,8 @@ if __name__=='__main__':
     parser.add_argument('--world_dim', type=int, default=5, help='Maze grid dimension')
     parser.add_argument('--obj1', type=str, default='red_line_diag', help='Maze object 1 name')
     parser.add_argument('--obj2', type=str, default='yellow_gem', help='Maze object 2 name')
-    parser.add_argument('--run_name', type=str, default='with-init-weights', help='run name, mainly for seeded runs')
+    parser.add_argument('--run_name', type=str, default='', help='run name, mainly for seeded runs')
+    parser.add_argument('--use_backgrounds', action='store_true')
 
     args = parser.parse_args()
 
@@ -168,6 +170,7 @@ if __name__=='__main__':
                                         device=args.device,
                                         gpu_device=args.gpu_device,
                                         save_first_obs=save_first_obs,
+                                        use_backgrounds=args.use_backgrounds,
                                         world_dim=world_dim,
                                         obj1=obj1,
                                         obj2=obj2,
