@@ -117,24 +117,23 @@ if __name__=='__main__':
     parser.add_argument('--vid_dir', type=str, default=None)
     parser.add_argument('--model_file', type=str, help="Can be either a path to a model file, or an "
                                        "integer. Integer is interpreted as random_percent in training")
-    parser.add_argument('--world_dim', type=int, default=5, help='Maze grid dimension')
     parser.add_argument('--obj1', type=str, default='red_line_diag', help='Maze object 1 name')
     parser.add_argument('--obj2', type=str, default='yellow_gem', help='Maze object 2 name')
-    parser.add_argument('--run_name', type=str, default='', help='run name, mainly for seeded runs')
+    parser.add_argument('--run_name', type=str, default='maze-5x5', help='which training run to evaluate')
     parser.add_argument('--use_backgrounds', action='store_true')
 
     args = parser.parse_args()
 
     set_global_log_levels(args.log_level)
 
-    world_dim = args.world_dim
     obj1 = args.obj1
     obj2 = args.obj2
 
     obj1_str = obj1.replace('_', '-').replace('-diag', '')
     obj2_str = obj2.replace('_', '-').replace('-diag', '')
-    path = f'logs/train/maze_pure_yellowline/maze-{world_dim}x{world_dim}-{args.run_name}/'
-    path_out = f'experiments/results-1000/maze-{world_dim}x{world_dim}{"-"+args.run_name if args.run_name else ""}/{obj1_str}-{obj2_str}/'
+    path = f'logs/train/maze_pure_yellowline/{args.run_name}/'
+    path_out = f'experiments/results-1000/{args.run_name}/{obj1_str}-{obj2_str}/'
+    world_dim = int(args.run_name.split('-')[1].split('x')[0])  # assuming runs are named maze-5x5-something
     print(f'\nRunning experiment: {"/".join(path_out.split("/")[-3:])}, {NUM_SEEDS} seeds.')
 
     agent_folders = sorted(os.listdir(path))
