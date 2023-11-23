@@ -27,6 +27,8 @@ def run_env(
         save_value=False,
         save_first_obs=False,
         world_dim=5,
+        obj1='red_line_diag',
+        obj2='yellow_gem',
         **kwargs):
     """
     Runs one maze level.
@@ -167,6 +169,8 @@ if __name__=='__main__':
                                         gpu_device=args.gpu_device,
                                         save_first_obs=save_first_obs,
                                         world_dim=world_dim,
+                                        obj1=obj1,
+                                        obj2=obj2,
                                         # random_percent=args.random_percent,
                                         # reset_mode=args.reset_mode
                                         )

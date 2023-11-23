@@ -1,21 +1,14 @@
 # save a video of first X frames when a certain model is evaluated.
 # requires `--model_file` parameter
-from common.env.procgen_wrappers import *
-from common import set_global_seeds, set_global_log_levels
+import argparse
 import copy
-import csv
 import cv2
-import os, argparse
-import psutil
-import random
-from tqdm import tqdm
-import config
+import os
 import matplotlib.pyplot as plt
 import numpy as np
-import skvideo.io
 import time
 
-
+from common import set_global_seeds, set_global_log_levels
 from run_utils import load_env_and_agent
 
 NUM_SEEDS = 1000
@@ -29,11 +22,13 @@ def run_env(
         save_first_obs=False,
         use_backgrounds=False,
         env_name='maze_colorsobjects_duel',
+        world_dim=5,
+        obj1='red_line_diag',
+        obj2='yellow_gem',
         **kwargs):
     """
     Runs one maze level.
-    returns level metrics. If logfile (csv) is supplied, metrics are also
-    appended there.
+    returns level metrics and frames.
     """
     if save_value:
         raise NotImplementedError
@@ -103,13 +98,13 @@ if __name__=='__main__':
 
     #render parameters
     parser.add_argument('--num_envs', type=int, default=1)
-    parser.add_argument('--vid_path', type=str, default=None)
-    parser.add_argument('--model_file', type=str, help="Can be either a path to a model file, or an "
-                                       "integer. Integer is interpreted as random_percent in training")
+    parser.add_argument('--vid_path', type=str, required=True, default="videos/episodes.avi",
+                        help="output video path. use avi for lossless")
+    parser.add_argument('--model_file', type=str, required=True, help="path to a model file")
     parser.add_argument('--world_dim', type=int, default=5, help='Maze grid dimension')
-    parser.add_argument('--obj1', type=str, default='red_line_diag', help='Maze object 1 name')
-    parser.add_argument('--obj2', type=str, default='yellow_gem', help='Maze object 2 name')
-    parser.add_argument('--video_frames', type=int, default=100)
+    parser.add_argument('--obj1', type=str, default='', help='Maze object 1 name')
+    parser.add_argument('--obj2', type=str, default='', help='Maze object 2 name')
+    parser.add_argument('--video_frames', type=int, default=100, help='Number of first frames to save')
     parser.add_argument('--use_backgrounds', action='store_true')
     parser.add_argument('--env_name', type=str, default='maze_colorsobjects_duel')
 
@@ -121,12 +116,6 @@ if __name__=='__main__':
     obj1 = args.obj1
     obj2 = args.obj2
 
-    obj1_str = obj1.replace('_', '-').replace('-diag', '')
-    obj2_str = obj2.replace('_', '-').replace('-diag', '')
-    path = f'logs/train/maze_pure_yellowline/maze-{world_dim}x{world_dim}-with-init-weights/'
-    path_out = f'videos/maze-{world_dim}x{world_dim}-with-init-weights/{obj1_str}-{obj2_str}/'
-
-    agent_folders = sorted(os.listdir(path))
     total_steps = 0
     first_start_time = time.time()
     start_time = time.time()
@@ -135,12 +124,8 @@ if __name__=='__main__':
 
     path_to_model_file = args.model_file
     agent_folder, model_file = path_to_model_file.split('/')[-2:]
-    logpath = os.path.join(path_out, agent_folder)
-    os.makedirs(logpath, exist_ok=True)
 
     seeds = np.arange(NUM_SEEDS) + args.start_level_seed
-
-    logfile = os.path.join(logpath, f'{model_file[:-4]}.csv')
 
     outs = []
     video_frames = []
@@ -152,32 +137,24 @@ if __name__=='__main__':
                                                 gpu_device=args.gpu_device,
                                                 use_backgrounds=args.use_backgrounds,
                                                 env_name=args.env_name,
+                                                world_dim=world_dim,
+                                                obj1=obj1,
+                                                obj2=obj2,
                                                 # random_percent=args.random_percent,
                                                 # reset_mode=args.reset_mode
                                                 )
         outs.append(out)
         video_frames += episode_frames
-        if obs_save is not None:
-            first_obs_file = os.path.join(logpath, f'seed-{env_seed}.png')
-            plt.imsave(first_obs_file, np.rollaxis(obs_save[0], 0, 3))
         if len(video_frames) > args.video_frames:
             break
-    with open(logfile, "w") as f:
-        w = csv.writer(f)
-        w.writerow(['seed', 'steps', 'reward'])
-        for out in outs:
-            w.writerow(out)
 
-    if args.vid_path:
-        vid_path = args.vid_path
-    else:
-        vid_path = os.path.join(logpath, 'episodes.avi')
+    vid_path = args.vid_path
     os.makedirs(os.path.dirname(vid_path), exist_ok=True)
     video_frames = [(frame * 255).astype(np.uint8) for frame in video_frames][:args.video_frames]  # rescale
     video_frames = [frame[:, :, ::-1] for frame in video_frames]  # RGB->BGR
     height, width, layers = video_frames[0].shape
 
-    out = cv2.VideoWriter(vid_path, cv2.VideoWriter_fourcc(*'FFV1'), 5.0, (width, height))
+    out = cv2.VideoWriter(vid_path, cv2.VideoWriter_fourcc(*'FFV1'), 5.0, (width, height))  # lossless codec
 
     for frame in video_frames:
         out.write(frame)
