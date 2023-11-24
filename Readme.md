@@ -1,4 +1,11 @@
-# Training code for Objective Robustness Failures in Deep Reinforcement Learning
+# Training code for the paper Colour versus Shape Goal Misgeneralization in Reinforcement Learning: A Case Study
+
+This code was forked from [this repo](https://github.com/jbkjr/train-procgen-pytorch) and built on.  
+For full details of changes and how to run it see [the parent repo](https://github.com/KarolisRam/colour-shape-goal-misgeneralization).  
+  
+For installation of dependencies check the original readme below:
+
+## Training code for Objective Robustness Failures in Deep Reinforcement Learning
 
 This code is based on a fork of [this repository](https://github.com/joonleesky/train-procgen-pytorch) by Hojoon Lee.
 It includes scripts for training RL agents on [modified procgen environments](https://github.com/JacobPfau/procgenAISC/master) and producing the figures for the paper [Objective Robustness in Deep Reinforcement Learning](https://arxiv.org/abs/2105.14111).
