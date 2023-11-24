@@ -132,7 +132,7 @@ if __name__=='__main__':
     obj1_str = obj1.replace('_', '-').replace('-diag', '')
     obj2_str = obj2.replace('_', '-').replace('-diag', '')
     path = f'logs/train/maze_pure_yellowline/{args.run_name}/'
-    path_out = f'experiments/results-1000/{args.run_name}/{obj1_str}-{obj2_str}/'
+    path_out = f'experiments/results-1000/{args.run_name}/{obj1_str}-{obj2_str}-final-model/'
     world_dim = int(args.run_name.split('-')[1].split('x')[0])  # assuming runs are named maze-5x5-something
     print(f'\nRunning experiment: {"/".join(path_out.split("/")[-3:])}, {NUM_SEEDS} seeds.')
 
